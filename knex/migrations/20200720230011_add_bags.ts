@@ -5,6 +5,7 @@ export const up = (knex: Knex): Promise<void> =>
   knex.schema.createTable(Bag.tableName, (table: Knex.TableBuilder) => {
     table.increments();
     table.timestamps();
+    table.text('title');
     table.integer('volume');
   });
 
