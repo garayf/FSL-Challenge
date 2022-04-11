@@ -196,16 +196,22 @@ describe('cuboid update', () => {
     );
   });
 
-  it('should succeed to update the cuboid', () => {
+  it('should succeed to update the cuboid', async () => {
     const [newWidth, newHeight, newDepth] = [5, 5, 5];
-    const response = { body: {} as Cuboid, status: HttpStatus.OK };
-    cuboid = response.body;
+    const response = await request(server)
+      .put('/cuboids/' + cuboid.id)
+      .send({
+        ...cuboid,
+        width: newWidth,
+        height: newHeight,
+        depth: newDepth,
+      });
 
     expect(response.status).toBe(HttpStatus.OK);
-    expect(cuboid.width).toBe(newWidth);
-    expect(cuboid.height).toBe(newHeight);
-    expect(cuboid.depth).toBe(newDepth);
-    expect(cuboid.bag?.id).toBe(bag.id);
+    expect(response.body.width).toBe(newWidth);
+    expect(response.body.height).toBe(newHeight);
+    expect(response.body.depth).toBe(newDepth);
+    expect(response.body.bag?.id).toBe(bag.id);
   });
 
   it('should fail to update if insufficient capacity and return 422 status code', () => {
@@ -223,9 +229,40 @@ describe('cuboid update', () => {
 });
 
 describe('cuboid delete', () => {
-  it('should delete the cuboid', () => {
-    const response = { status: HttpStatus.OK };
+  let bag: Bag;
+  let cuboid: Cuboid;
 
+  beforeEach(async () => {
+    bag = await Bag.query().insert(
+      factories.bag.build({
+        volume: 250,
+        title: 'A bag',
+      })
+    );
+    await Cuboid.query().insert(
+      factories.cuboid.build({
+        width: 5,
+        height: 5,
+        depth: 5,
+        bagId: bag.id,
+      })
+    );
+    cuboid = await Cuboid.query().insert(
+      factories.cuboid.build({
+        width: 4,
+        height: 4,
+        depth: 4,
+        bagId: bag.id,
+      })
+    );
+  });
+
+  it('should delete the cuboid', async () => {
+    const response = await request(server)
+      .delete('/cuboids/' + cuboid.id)
+      .send({
+        cuboid,
+      });
     expect(response.status).toBe(HttpStatus.OK);
   });
 
